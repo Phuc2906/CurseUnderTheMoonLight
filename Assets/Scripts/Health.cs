@@ -10,22 +10,20 @@ public class Health : MonoBehaviour
     private RectTransform whiteTransform;
 
     private float originalWidth;
-    private Vector2 originalPosition; // Lưu vị trí gốc của thanh máu
+    private Vector2 originalPosition;
 
     private float maxHP = 100f;
-    private float currentHP;
-    private float targetHP;
+    private float currentHP; // HP hiện tại
+    private float targetHP;  // HP mục tiêu để cập nhật UI từ từ
 
     private bool isDead = false;
-    private float reduceSpeed = 50f; // Tốc độ tụt từ từ
+    private float reduceSpeed = 100f; // Tốc độ tụt/tăng từ từ
 
     void Start()
     {
-        // Lấy RectTransform của health bars
         redTransform = healthBarRed.GetComponent<RectTransform>();
         whiteTransform = healthBarWhite.GetComponent<RectTransform>();
 
-        // Lưu vị trí và kích thước gốc
         originalWidth = redTransform.sizeDelta.x;
         originalPosition = redTransform.anchoredPosition;
 
@@ -42,7 +40,8 @@ public class Health : MonoBehaviour
 
         float redTargetWidth = originalWidth * (targetHP / maxHP);
 
-        if (redTransform.sizeDelta.x > redTargetWidth)
+        // Cập nhật thanh máu đỏ (tăng hoặc giảm từ từ)
+        if (!Mathf.Approximately(redTransform.sizeDelta.x, redTargetWidth))
         {
             float newWidth = Mathf.MoveTowards(
                 redTransform.sizeDelta.x,
@@ -51,7 +50,6 @@ public class Health : MonoBehaviour
             );
             redTransform.sizeDelta = new Vector2(newWidth, redTransform.sizeDelta.y);
 
-            // Điều chỉnh anchoredPosition để giữ thanh máu ở vị trí cố định
             float offset = (originalWidth - newWidth) / 2f;
             redTransform.anchoredPosition = new Vector2(
                 originalPosition.x + offset,
@@ -68,8 +66,20 @@ public class Health : MonoBehaviour
 
     public void TakeDamage(float damage)
     {
-        targetHP = Mathf.Max(targetHP - damage, 0f);
-        Debug.Log($"Player bị mất máu! HP còn lại: {targetHP}");
+        if (isDead) return;
+
+        targetHP = Mathf.Max(currentHP - damage, 0f); // Cập nhật targetHP khi nhận sát thương
+        currentHP = targetHP; // Đồng bộ hóa ngay lập tức
+        Debug.Log($"Player bị mất máu! HP còn lại: {currentHP}");
+    }
+
+    public void Heal(float amount)
+    {
+        if (isDead) return;
+
+        currentHP = Mathf.Min(currentHP + amount, maxHP);
+        targetHP = currentHP; // Đồng bộ targetHP với currentHP khi hồi máu
+        Debug.Log($"Hồi máu: {amount}, HP hiện tại: {currentHP}");
     }
 
     private void OnCollisionEnter2D(Collision2D collision)
@@ -87,9 +97,10 @@ public class Health : MonoBehaviour
     {
         isDead = true;
         redTransform.sizeDelta = new Vector2(0, redTransform.sizeDelta.y);
-        redTransform.anchoredPosition = originalPosition; // Đặt lại vị trí gốc khi chết
+        whiteTransform.sizeDelta = new Vector2(0, whiteTransform.sizeDelta.y);
+        redTransform.anchoredPosition = originalPosition;
+        whiteTransform.anchoredPosition = originalPosition;
 
-        // Gọi GameOver từ GameManager
         if (GameManager.instance != null)
         {
             GameManager.instance.GameOver();
