@@ -7,6 +7,7 @@ TagManager:
   - Ground
   - Enemy
   - Obstacle
+  - Health
   layers:
   - Default
   - TransparentFX
@@ -50,14 +51,14 @@ TagManager:
   - name: ForeGround
     uniqueID: 2232931959
     locked: 0
+  - name: Reward
+    uniqueID: 1931526299
+    locked: 0
   - name: Health
     uniqueID: 196605639
     locked: 0
   - name: Enemy
     uniqueID: 3646604365
-    locked: 0
-  - name: Reward
-    uniqueID: 1931526299
     locked: 0
   - name: Player
     uniqueID: 3985597057
